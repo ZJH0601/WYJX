@@ -17,6 +17,19 @@ int main() {
 }`;
 
 const transformCToJs = (source: string) => {
+  if (source.length > 12000) throw new Error('代码过长：教学实验台最多支持 12000 个字符。');
+  const structuralSource = source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '')
+    .replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""');
+  const forbidden = structuralSource.match(
+    /\b(?:window|document|globalThis|self|fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|Function|eval|constructor|__proto__|prototype|importScripts|postMessage|location|navigator|alert|confirm|prompt|console|function|class|async|await|new|try|catch|throw|do)\b|=>/,
+  );
+  if (forbidden) throw new Error(`教学子集不支持或不允许使用“${forbidden[0]}”。`);
+  for (const match of structuralSource.matchAll(/\b(?:for|while)\s*\([^)]*\)\s*/g)) {
+    const nextCharacter = structuralSource[(match.index || 0) + match[0].length];
+    if (nextCharacter !== '{') throw new Error('为保证运行安全，for 和 while 循环体必须使用 { }。');
+  }
   const main = source.match(/int\s+main\s*\([^)]*\)\s*\{([\s\S]*)\}\s*$/);
   if (!main) throw new Error('请保留 int main() { ... } 主函数。');
   const transformed = main[1]

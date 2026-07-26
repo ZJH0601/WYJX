@@ -23,6 +23,7 @@ export const Header = () => {
     { path: '/network', label: '网络知识' },
     { path: '/office', label: '办公自动化' },
     { path: '/lab', label: '实训中心' },
+    { path: '/review', label: '错题复习' },
     { path: '/exams', label: '题库系统' },
   ];
 

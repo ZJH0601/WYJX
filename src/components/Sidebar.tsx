@@ -1,4 +1,4 @@
-import { ChevronRight, BookOpen, Database, Globe, FileSpreadsheet, BarChart3, FlaskConical } from 'lucide-react';
+import { ChevronRight, BookOpen, Database, Globe, FileSpreadsheet, BarChart3, FlaskConical, RotateCcw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
@@ -113,6 +113,17 @@ export const Sidebar = () => {
             >
               <FlaskConical className="mr-3 w-5 h-5" />
               <span>跨课程实训中心</span>
+            </button>
+            <button
+              onClick={() => navigate('/review')}
+              className={`mb-2 w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive('/review')
+                  ? 'bg-rose-600 text-white'
+                  : 'text-gray-700 hover:bg-rose-50 hover:text-rose-700'
+              }`}
+            >
+              <RotateCcw className="mr-3 w-5 h-5" />
+              <span>错题复习中心</span>
             </button>
             <button
               onClick={() => navigate('/exams')}

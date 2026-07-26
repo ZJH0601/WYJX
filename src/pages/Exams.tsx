@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { FileText, Clock, CheckCircle, PlayCircle, ArrowLeft, Timer, RotateCcw, BarChart3, Filter } from 'lucide-react';
 import { exams, Exam } from '../data/questions';
 import { createMassivePracticeExam, MASSIVE_BANK_META } from '../data/massiveQuestionBank';
 import { useAppStore } from '../store/appStore';
+import { evaluateAnswer } from '../utils/answerEvaluator';
 
 /** 考试时间限制（分钟） */
 const EXAM_TIME_LIMIT = 60;
@@ -28,33 +29,77 @@ export const Exams = () => {
   const [timeLeft, setTimeLeft] = useState(EXAM_TIME_LIMIT * 60); // 秒
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { setExamResult } = useAppStore();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { setExamResult, recordWrongAnswer, resolveWrongAnswer } = useAppStore();
+
+  const handleSubmitExam = useCallback(() => {
+    if (!selectedExam || submitted) return;
+
+    setIsTimerRunning(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    let totalScore = 0;
+    const answerDetails: Record<string, { answer: string; correct: boolean; score: number }> = {};
+
+    selectedExam.questions.forEach((question) => {
+      const userAnswer = answers[question.id] || '';
+      const evaluation = evaluateAnswer(question, userAnswer);
+      const earnedScore = Math.round(question.score * evaluation.scoreRatio);
+      totalScore += earnedScore;
+      if (evaluation.correct) {
+        resolveWrongAnswer(question.id);
+      } else {
+        recordWrongAnswer({
+          questionId: question.id,
+          courseId: selectedExam.courseId,
+          question: question.question,
+          options: question.options,
+          type: question.type,
+          correctAnswer: question.answer,
+          userAnswer,
+          explanation: question.explanation,
+        });
+      }
+      answerDetails[question.id] = {
+        answer: userAnswer,
+        correct: evaluation.correct,
+        score: earnedScore,
+      };
+    });
+
+    setScore(totalScore);
+    setSubmitted(true);
+    setExamResult({
+      examId: selectedExam.id,
+      courseId: selectedExam.courseId,
+      score: totalScore,
+      totalScore: selectedExam.totalScore,
+      answers: answerDetails,
+      timestamp: Date.now(),
+    });
+  }, [answers, recordWrongAnswer, resolveWrongAnswer, selectedExam, setExamResult, submitted]);
 
   /** 倒计时逻辑 */
   useEffect(() => {
-    if (isTimerRunning && timeLeft > 0 && !submitted) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            // 时间到，自动提交
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (!isTimerRunning || submitted) return;
+    timerRef.current = setTimeout(() => {
+      if (timeLeft <= 1) {
+        setTimeLeft(0);
+        handleSubmitExam();
+        return;
+      }
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [isTimerRunning, submitted]);
-
-  /** 时间到自动提交 */
-  useEffect(() => {
-    if (timeLeft === 0 && isTimerRunning && !submitted) {
-      handleSubmitExam();
-    }
-  }, [timeLeft]);
+  }, [timeLeft, isTimerRunning, submitted, handleSubmitExam]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -75,44 +120,16 @@ export const Exams = () => {
   const handleSelectOption = (option: string) => {
     if (!submitted && selectedExam) {
       const question = selectedExam.questions[currentQuestionIndex];
-      setAnswers({ ...answers, [question.id]: option });
-    }
-  };
-
-  const handleSubmitExam = () => {
-    if (!selectedExam) return;
-    
-    setIsTimerRunning(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-    
-    let totalScore = 0;
-    const answerDetails: Record<string, { answer: string; correct: boolean; score: number }> = {};
-    
-    selectedExam.questions.forEach((question) => {
-      const userAnswer = answers[question.id] || '';
-      const isCorrect = userAnswer.toLowerCase() === question.answer.toLowerCase();
-      if (isCorrect) {
-        totalScore += question.score;
+      if (question.type === 'multiple') {
+        const selected = (answers[question.id] || '').split(',').filter(Boolean);
+        const next = selected.includes(option)
+          ? selected.filter((item) => item !== option)
+          : [...selected, option];
+        setAnswers({ ...answers, [question.id]: next.sort().join(',') });
+      } else {
+        setAnswers({ ...answers, [question.id]: option });
       }
-      answerDetails[question.id] = {
-        answer: userAnswer,
-        correct: isCorrect,
-        score: isCorrect ? question.score : 0,
-      };
-    });
-    
-    setScore(totalScore);
-    setSubmitted(true);
-    
-    // 保存考试结果（含答题详情）
-    setExamResult({
-      examId: selectedExam.id,
-      courseId: selectedExam.courseId,
-      score: totalScore,
-      totalScore: selectedExam.totalScore,
-      answers: answerDetails,
-      timestamp: Date.now(),
-    });
+    }
   };
 
   const handleNextQuestion = () => {
@@ -136,8 +153,8 @@ export const Exams = () => {
     if (!question) return 'exercise-option';
     
     const optionLabel = getOptionLabel(optionIndex);
-    const isSelected = answers[question.id] === optionLabel;
-    const isCorrectAnswer = optionLabel === question.answer;
+    const isSelected = (answers[question.id] || '').split(',').includes(optionLabel);
+    const isCorrectAnswer = question.answer.split(/[,|]/).includes(optionLabel);
 
     if (!submitted) {
       return isSelected ? 'exercise-option selected' : 'exercise-option';
@@ -152,9 +169,13 @@ export const Exams = () => {
     return 'exercise-option';
   };
 
+  const scorePercentage = selectedExam?.totalScore
+    ? Math.round((score / selectedExam.totalScore) * 100)
+    : 0;
+
   const getScoreColor = () => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
+    if (scorePercentage >= 80) return 'text-green-600';
+    if (scorePercentage >= 60) return 'text-yellow-600';
     return 'text-red-600';
   };
 
@@ -278,7 +299,7 @@ export const Exams = () => {
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => {
-                if (timerRef.current) clearInterval(timerRef.current);
+                if (timerRef.current) clearTimeout(timerRef.current);
                 setIsTimerRunning(false);
                 setSelectedExam(null);
               }}
@@ -347,7 +368,7 @@ export const Exams = () => {
                         className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 flex items-center space-x-3 ${getOptionClass(option, index)}`}
                       >
                         <span className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
-                          answers[selectedExam.questions[currentQuestionIndex].id] === getOptionLabel(index)
+                          (answers[selectedExam.questions[currentQuestionIndex].id] || '').split(',').includes(getOptionLabel(index))
                             ? 'bg-primary-600 text-white'
                             : 'bg-gray-100 text-gray-600'
                         }`}>
@@ -414,36 +435,36 @@ export const Exams = () => {
       {selectedExam && submitted && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <div className={`w-24 h-24 ${score >= 80 ? 'bg-green-100' : score >= 60 ? 'bg-yellow-100' : 'bg-red-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+            <div className={`w-24 h-24 ${scorePercentage >= 80 ? 'bg-green-100' : scorePercentage >= 60 ? 'bg-yellow-100' : 'bg-red-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
               <span className={`text-4xl font-bold ${getScoreColor()}`}>
-                {Math.round((score / selectedExam.totalScore) * 100)}
+                {scorePercentage}
               </span>
             </div>
             
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              {score >= 80 ? '优秀！' : score >= 60 ? '考试通过！' : '需要继续努力！'}
+              {scorePercentage >= 80 ? '优秀！' : scorePercentage >= 60 ? '考试通过！' : '需要继续努力！'}
             </h2>
             <p className="text-gray-600 mb-4">
-              你的得分：{score} / {selectedExam.totalScore}（{Math.round((score / selectedExam.totalScore) * 100)}分）
+              你的得分：{score} / {selectedExam.totalScore}（{scorePercentage}分）
             </p>
             <p className="text-sm text-gray-500 mb-6">
               用时：{formatTime(EXAM_TIME_LIMIT * 60 - timeLeft)}
             </p>
 
-            <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-4">
               <div className="bg-blue-50 rounded-lg p-4">
                 <p className="text-2xl font-bold text-blue-600">{selectedExam.questions.length}</p>
                 <p className="text-sm text-gray-500">总题数</p>
               </div>
               <div className="bg-green-50 rounded-lg p-4">
                 <p className="text-2xl font-bold text-green-600">
-                  {selectedExam.questions.filter((q) => answers[q.id]?.toLowerCase() === q.answer.toLowerCase()).length}
+                  {selectedExam.questions.filter((q) => evaluateAnswer(q, answers[q.id] || '').correct).length}
                 </p>
                 <p className="text-sm text-gray-500">正确</p>
               </div>
               <div className="bg-red-50 rounded-lg p-4">
                 <p className="text-2xl font-bold text-red-600">
-                  {selectedExam.questions.filter((q) => answers[q.id]?.toLowerCase() !== q.answer.toLowerCase()).length}
+                  {selectedExam.questions.filter((q) => answers[q.id] && !evaluateAnswer(q, answers[q.id]).correct).length}
                 </p>
                 <p className="text-sm text-gray-500">错误</p>
               </div>
@@ -460,7 +481,8 @@ export const Exams = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">答题详情</h3>
               <div className="space-y-4">
                 {selectedExam.questions.map((question, index) => {
-                  const isCorrect = answers[question.id]?.toLowerCase() === question.answer.toLowerCase();
+                  const evaluation = evaluateAnswer(question, answers[question.id] || '');
+                  const isCorrect = evaluation.correct;
                   return (
                     <div
                       key={question.id}
@@ -480,6 +502,8 @@ export const Exams = () => {
                               正确答案：<span className="text-green-600">{question.answer}</span>
                             </span>
                           </div>
+                          <p className="mt-2 text-sm text-gray-600"><strong>解析：</strong>{question.explanation}</p>
+                          {!isCorrect && <p className="mt-1 text-sm text-red-700"><strong>改进建议：</strong>{evaluation.feedback}</p>}
                         </div>
                       </div>
                     </div>

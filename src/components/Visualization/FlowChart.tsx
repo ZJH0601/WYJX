@@ -47,7 +47,7 @@ export const FlowChart = ({ nodes, connections, title }: FlowChartProps) => {
           const toNode = nodes.find(n => n.id === conn.to);
           if (!fromNode || !toNode) return null;
 
-          let path = '';
+          let path: string;
           if (fromNode.type === 'decision') {
             // 菱形节点的连接
             if (toNode.y > fromNode.y) {

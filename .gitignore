@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+/.vite/
+/assets/
+/favicon.svg
+/.nojekyll
 
 # Editor directories and files
 .vscode/*

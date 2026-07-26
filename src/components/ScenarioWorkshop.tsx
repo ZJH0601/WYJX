@@ -175,8 +175,34 @@ const OfficeWorkshop = () => {
   </div>;
 };
 
-export const ScenarioWorkshop = ({ courseId }: { courseId: CourseId }) => {
-  const [networkMode, setNetworkMode] = useState<'cable' | 'osi'>('cable');
+const DocumentWorkshop = () => {
+  const [fontSize, setFontSize] = useState(16);
+  const [bold, setBold] = useState(false);
+  const [align, setAlign] = useState<'left' | 'center' | 'justify'>('left');
+  const [columns, setColumns] = useState(1);
+  return <div className="grid gap-5 lg:grid-cols-[1fr_2fr]">
+    <div className="rounded-xl bg-indigo-50 p-4">
+      <p className="font-bold">Word排版任务</p>
+      <label className="mt-3 block text-sm">字号：{fontSize}px<input type="range" min="12" max="28" value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} className="mt-2 w-full" /></label>
+      <button onClick={() => setBold(!bold)} className={`mt-3 w-full rounded-lg border p-3 font-bold ${bold ? 'bg-indigo-700 text-white' : 'bg-white'}`}>标题加粗</button>
+      <div className="mt-2 grid grid-cols-3 gap-1">{(['left', 'center', 'justify'] as const).map((value) => <button key={value} onClick={() => setAlign(value)} className={`rounded-lg border p-2 text-xs ${align === value ? 'bg-indigo-700 text-white' : 'bg-white'}`}>{value === 'left' ? '左对齐' : value === 'center' ? '居中' : '两端对齐'}</button>)}</div>
+      <button onClick={() => setColumns(columns === 1 ? 2 : 1)} className="mt-2 w-full rounded-lg border bg-white p-3 text-sm font-bold">{columns === 1 ? '切换为双栏' : '恢复单栏'}</button>
+    </div>
+    <div className="rounded-xl border bg-white p-6 shadow-inner">
+      <h4 style={{ fontSize: `${fontSize + 6}px`, fontWeight: bold ? 800 : 400, textAlign: align === 'justify' ? 'left' : align }}>职业技能学习报告</h4>
+      <div style={{ fontSize: `${fontSize}px`, textAlign: align, columnCount: columns, columnGap: '2rem' }} className="mt-4 leading-8 text-slate-700">
+        <p>规范的文档排版应先建立清晰的信息层级，再统一应用标题和正文样式。使用样式可以批量更新格式，并为自动目录提供结构依据。</p>
+        <p>调整字号、粗细、对齐方式和分栏，观察版式变化。排版的目标不是堆叠效果，而是提高可读性、结构性与信息传达效率。</p>
+      </div>
+    </div>
+  </div>;
+};
+
+export const ScenarioWorkshop = ({ courseId, lessonTitle = '' }: { courseId: CourseId; lessonTitle?: string }) => {
+  const [networkMode, setNetworkMode] = useState<'cable' | 'osi'>(
+    /osi|tcp\/ip|协议|分层|封装/i.test(lessonTitle) ? 'osi' : 'cable',
+  );
+  const officeUsesDocument = /word|文档|排版|页眉|页脚|目录|邮件|图文|分栏/i.test(lessonTitle);
   const meta = {
     'c-language': { icon: MemoryStick, title: 'C语言单步执行与内存观察' },
     vfp: { icon: Database, title: 'VFP数据表与记录操作模拟' },
@@ -192,7 +218,7 @@ export const ScenarioWorkshop = ({ courseId }: { courseId: CourseId }) => {
       {courseId === 'c-language' && <CTraceWorkshop />}
       {courseId === 'vfp' && <VfpWorkshop />}
       {courseId === 'network' && (networkMode === 'cable' ? <CableWorkshop /> : <OsiWorkshop />)}
-      {courseId === 'office' && <OfficeWorkshop />}
+      {courseId === 'office' && (officeUsesDocument ? <DocumentWorkshop /> : <OfficeWorkshop />)}
     </div>
   </section>;
 };

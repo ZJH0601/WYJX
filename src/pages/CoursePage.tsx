@@ -7,6 +7,7 @@ import { useAppStore } from '../store/appStore';
 import { LearningCycle } from '../components/LearningCycle';
 import { InteractiveLab } from '../components/InteractiveLab';
 import { ScenarioWorkshop } from '../components/ScenarioWorkshop';
+import { LessonClosurePanel } from '../components/LessonClosurePanel';
 
 /** 可视化组件数据驱动映射表 - 通过 visualType 字段动态加载可视化组件 */
 const VISUALIZATION_MAP: Record<string, () => React.ReactElement> = {
@@ -124,7 +125,8 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
         completed: false,
         exerciseScore: 0,
         exerciseMaxScore: 0,
-        timestamp: Date.now(),
+        // store 会在持久化时写入真实时间戳；这里保持事件数据为纯值。
+        timestamp: 0,
       });
     }
   };
@@ -272,8 +274,15 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
                   <CodeBlock code={selectedLesson.code} language="c" />
                 )}
 
-                <InteractiveLab courseId={labCourse} compact lessonTitle={selectedLesson.title} />
-                <ScenarioWorkshop courseId={labCourse} />
+                <InteractiveLab key={`lab:${selectedLesson.id}`} courseId={labCourse} compact lessonTitle={selectedLesson.title} />
+                <ScenarioWorkshop key={`scenario:${selectedLesson.id}`} courseId={labCourse} lessonTitle={selectedLesson.title} />
+                <LessonClosurePanel
+                  key={`closure:${selectedLesson.id}`}
+                  courseId={courseId}
+                  chapterId={selectedChapterId}
+                  lessonId={selectedLesson.id}
+                  lessonTitle={selectedLesson.title}
+                />
 
                 {/* Practice Area */}
                 {selectedLesson.exercises && selectedLesson.exercises.length > 0 && (

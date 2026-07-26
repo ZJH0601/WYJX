@@ -13,6 +13,7 @@ const Office = lazy(() => import('./pages/Office').then(m => ({ default: m.Offic
 const Exams = lazy(() => import('./pages/Exams').then(m => ({ default: m.Exams })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const Lab = lazy(() => import('./pages/Lab').then(m => ({ default: m.Lab })));
+const Review = lazy(() => import('./pages/Review').then(m => ({ default: m.Review })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 /** 课程页面加载骨架屏 */
@@ -58,6 +59,7 @@ const CourseLayout = () => {
             <Route path="/exams" element={<Exams />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/lab" element={<Lab />} />
+            <Route path="/review" element={<Review />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

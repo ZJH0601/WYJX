@@ -13,7 +13,35 @@ export interface LearningProgress {
   exerciseScore: number;
   /** 练习最大可能得分，用于计算完成百分比 */
   exerciseMaxScore: number;
+  readCompleted?: boolean;
+  experimentCompleted?: boolean;
+  practiceCompleted?: boolean;
+  masteryLevel?: 'started' | 'understanding' | 'practiced' | 'mastered';
+  attempts?: number;
   timestamp: number;
+}
+
+export interface WrongAnswerRecord {
+  questionId: string;
+  courseId: string;
+  chapterId?: string;
+  lessonId?: string;
+  question: string;
+  options?: string[];
+  type: string;
+  correctAnswer: string;
+  userAnswer: string;
+  explanation: string;
+  attempts: number;
+  lastWrongAt: number;
+}
+
+export interface LessonNote {
+  courseId: string;
+  chapterId: string;
+  lessonId: string;
+  content: string;
+  updatedAt: number;
 }
 
 /**
@@ -45,7 +73,7 @@ export interface CourseStats {
 /** 各课程总课时数映射表 */
 const COURSE_LESSON_COUNTS: Record<string, number> = {
   'c-language': 28,  // 9章 (8+1综合实战)
-  'vfp': 22,          // 7章 (6+1综合实战)
+  'vfp': 23,
   'network': 18,      // 5章 + 新增子网划分、IPv6、网络命令、DHCP
   'office': 24,       // 7章 (6+1PowerPoint)
 };
@@ -53,18 +81,33 @@ const COURSE_LESSON_COUNTS: Record<string, number> = {
 interface AppState {
   progress: LearningProgress[];
   examResults: ExamResult[];
+  wrongAnswers: WrongAnswerRecord[];
+  notes: LessonNote[];
+  bookmarks: string[];
   currentCourse: string;
   currentChapter: string;
   currentLesson: string;
   sidebarOpen: boolean;
   
   setProgress: (progress: LearningProgress) => void;
+  markLessonStage: (
+    courseId: string,
+    chapterId: string,
+    lessonId: string,
+    stage: 'read' | 'experiment',
+  ) => void;
   getProgress: (courseId: string, chapterId: string, lessonId: string) => LearningProgress | undefined;
   getCourseProgress: (courseId: string) => number;
   getCourseStats: (courseId: string) => CourseStats;
   getOverallStats: () => { totalLessons: number; completedLessons: number; totalExams: number; averageScore: number };
   setExamResult: (result: ExamResult) => void;
   getExamResults: (courseId: string) => ExamResult[];
+  recordWrongAnswer: (record: Omit<WrongAnswerRecord, 'attempts' | 'lastWrongAt'>) => void;
+  resolveWrongAnswer: (questionId: string) => void;
+  clearWrongAnswers: (courseId?: string) => void;
+  setLessonNote: (note: Omit<LessonNote, 'updatedAt'>) => void;
+  getLessonNote: (courseId: string, chapterId: string, lessonId: string) => LessonNote | undefined;
+  toggleBookmark: (lessonKey: string) => void;
   setCurrentCourse: (courseId: string) => void;
   setCurrentChapter: (chapterId: string) => void;
   setCurrentLesson: (lessonId: string) => void;
@@ -78,6 +121,9 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       progress: [],
       examResults: [],
+      wrongAnswers: [],
+      notes: [],
+      bookmarks: [],
       currentCourse: '',
       currentChapter: '',
       currentLesson: '',
@@ -94,11 +140,50 @@ export const useAppStore = create<AppState>()(
           
           if (existingIndex >= 0) {
             const updated = [...state.progress];
-            updated[existingIndex] = { ...newProgress, timestamp: Date.now() };
+            updated[existingIndex] = { ...updated[existingIndex], ...newProgress, timestamp: Date.now() };
             return { progress: updated };
           }
           
           return { progress: [...state.progress, { ...newProgress, timestamp: Date.now() }] };
+        });
+      },
+
+      markLessonStage: (courseId, chapterId, lessonId, stage) => {
+        set((state) => {
+          const existingIndex = state.progress.findIndex(
+            (item) => item.courseId === courseId && item.chapterId === chapterId && item.lessonId === lessonId,
+          );
+          const base: LearningProgress = existingIndex >= 0
+            ? state.progress[existingIndex]
+            : {
+                courseId,
+                chapterId,
+                lessonId,
+                completed: false,
+                exerciseScore: 0,
+                exerciseMaxScore: 0,
+                timestamp: Date.now(),
+              };
+          const readCompleted = stage === 'read' ? true : Boolean(base.readCompleted);
+          const experimentCompleted = stage === 'experiment' ? true : Boolean(base.experimentCompleted);
+          const practicePassed = Boolean(
+            base.practiceCompleted &&
+            base.exerciseMaxScore > 0 &&
+            base.exerciseScore / base.exerciseMaxScore >= 0.8,
+          );
+          const closureComplete = readCompleted && experimentCompleted && practicePassed;
+          const updated: LearningProgress = {
+            ...base,
+            readCompleted,
+            experimentCompleted,
+            completed: closureComplete,
+            masteryLevel: closureComplete ? 'mastered' : practicePassed ? 'practiced' : 'understanding',
+            timestamp: Date.now(),
+          };
+          const progress = [...state.progress];
+          if (existingIndex >= 0) progress[existingIndex] = updated;
+          else progress.push(updated);
+          return { progress };
         });
       },
       
@@ -166,6 +251,50 @@ export const useAppStore = create<AppState>()(
       getExamResults: (courseId) => {
         return get().examResults.filter((e) => e.courseId === courseId);
       },
+
+      recordWrongAnswer: (record) => {
+        set((state) => {
+          const existing = state.wrongAnswers.find((item) => item.questionId === record.questionId);
+          const next: WrongAnswerRecord = {
+            ...record,
+            attempts: (existing?.attempts || 0) + 1,
+            lastWrongAt: Date.now(),
+          };
+          return {
+            wrongAnswers: existing
+              ? state.wrongAnswers.map((item) => item.questionId === record.questionId ? next : item)
+              : [next, ...state.wrongAnswers],
+          };
+        });
+      },
+      resolveWrongAnswer: (questionId) =>
+        set((state) => ({ wrongAnswers: state.wrongAnswers.filter((item) => item.questionId !== questionId) })),
+      clearWrongAnswers: (courseId) =>
+        set((state) => ({
+          wrongAnswers: courseId
+            ? state.wrongAnswers.filter((item) => item.courseId !== courseId)
+            : [],
+        })),
+      setLessonNote: (note) => {
+        set((state) => {
+          const keyMatches = (item: LessonNote) =>
+            item.courseId === note.courseId && item.chapterId === note.chapterId && item.lessonId === note.lessonId;
+          const next = { ...note, updatedAt: Date.now() };
+          return {
+            notes: state.notes.some(keyMatches)
+              ? state.notes.map((item) => keyMatches(item) ? next : item)
+              : [...state.notes, next],
+          };
+        });
+      },
+      getLessonNote: (courseId, chapterId, lessonId) =>
+        get().notes.find((item) => item.courseId === courseId && item.chapterId === chapterId && item.lessonId === lessonId),
+      toggleBookmark: (lessonKey) =>
+        set((state) => ({
+          bookmarks: state.bookmarks.includes(lessonKey)
+            ? state.bookmarks.filter((item) => item !== lessonKey)
+            : [...state.bookmarks, lessonKey],
+        })),
       
       setCurrentCourse: (courseId) => set({ currentCourse: courseId }),
       setCurrentChapter: (chapterId) => set({ currentChapter: chapterId }),
@@ -180,9 +309,12 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             progress: state.progress.filter((p) => p.courseId !== courseId),
             examResults: state.examResults.filter((e) => e.courseId !== courseId),
+            wrongAnswers: state.wrongAnswers.filter((item) => item.courseId !== courseId),
+            notes: state.notes.filter((item) => item.courseId !== courseId),
+            bookmarks: state.bookmarks.filter((item) => !item.startsWith(`${courseId}:`)),
           }));
         } else {
-          set({ progress: [], examResults: [] });
+          set({ progress: [], examResults: [], wrongAnswers: [], notes: [], bookmarks: [] });
         }
       },
     }),

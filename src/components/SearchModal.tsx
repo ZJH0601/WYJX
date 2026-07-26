@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Search, X, BookOpen, Database, Globe, FileSpreadsheet, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { FuseResult } from 'fuse.js';
@@ -44,34 +44,35 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
     }
   };
 
-  const handleSelect = (result: FuseResult<SearchableContent>) => {
-    const item = result.item;
-    navigate(`/${item.courseId}#${item.lessonId}`);
-    onClose();
+  const handleClose = useCallback(() => {
     setQuery('');
     setSelectedIndex(0);
-  };
+    onClose();
+  }, [onClose]);
+
+  const handleSelect = useCallback((result: FuseResult<SearchableContent>) => {
+    const item = result.item;
+    navigate(`/${item.courseId}#${item.lessonId}`);
+    handleClose();
+  }, [navigate, handleClose]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-    } else {
-      // 打开时自动聚焦输入框
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (!isOpen) return;
+    // 打开时自动聚焦输入框；异步回调避免在 Effect 中同步触发状态更新。
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
+    return () => window.clearTimeout(timer);
   }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (e.key === 'Escape') {
-        onClose();
+        handleClose();
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        onClose();
+        handleClose();
         return;
       }
       // 键盘导航
@@ -88,14 +89,14 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, onClose]);
+  }, [isOpen, results, selectedIndex, handleClose, handleSelect]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100]">
       {/* 遮罩层 */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
 
       {/* 搜索面板 */}
       <div className="fixed inset-x-0 top-[15%] mx-auto max-w-2xl px-4">
@@ -112,7 +113,7 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
               className="flex-1 ml-3 text-base outline-none text-gray-800 placeholder-gray-400"
             />
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <X className="w-5 h-5 text-gray-400" />

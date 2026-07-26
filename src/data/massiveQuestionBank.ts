@@ -5,8 +5,21 @@ type CourseId = 'c-language' | 'vfp' | 'network' | 'office';
 type Difficulty = 'basic' | 'improve' | 'exam';
 
 const difficultyFor = (seed: number): Difficulty => seed % 5 < 2 ? 'basic' : seed % 5 < 4 ? 'improve' : 'exam';
+const hash = (text: string) => [...text].reduce((value, char) => ((value * 31) + char.charCodeAt(0)) >>> 0, 2166136261);
 const choice = (id: string, question: string, options: string[], answer: number, explanation: string, difficulty: Difficulty): Exercise => ({
-  id, type: 'single', question, options, answer: String.fromCharCode(65 + answer), explanation, score: 5, difficulty,
+  id,
+  type: 'single',
+  question,
+  ...(() => {
+    // 按题目ID确定性旋转选项，让A/B/C/D分布均衡，同时保证同一题刷新后保持稳定。
+    const rotation = hash(id) % options.length;
+    const rotatedOptions = [...options.slice(rotation), ...options.slice(0, rotation)];
+    const rotatedAnswer = (answer - rotation + options.length) % options.length;
+    return { options: rotatedOptions, answer: String.fromCharCode(65 + rotatedAnswer) };
+  })(),
+  explanation,
+  score: 5,
+  difficulty,
 });
 
 const cQuestions = (): Exercise[] => Array.from({ length: 250 }, (_, index) => {
@@ -174,7 +187,6 @@ export const MASSIVE_BANK_META = [
   { courseId: 'office' as const, courseName: '办公自动化', count: massiveQuestionBanks.office.length },
 ];
 
-const hash = (text: string) => [...text].reduce((value, char) => ((value * 31) + char.charCodeAt(0)) >>> 0, 2166136261);
 export const createMassivePracticeExam = (courseId: CourseId, difficulty: Difficulty | 'all' = 'all', size = 20): Exam => {
   const source = massiveQuestionBanks[courseId].filter((question) => difficulty === 'all' || question.difficulty === difficulty);
   const offset = hash(`${courseId}-${difficulty}-${Date.now()}`) % source.length;

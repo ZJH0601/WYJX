@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Exercise } from '../data/cLanguage';
 import { useAppStore } from '../store/appStore';
+import { evaluateAnswer } from '../utils/answerEvaluator';
 
 interface PracticeAreaProps {
   exercises: Exercise[];
@@ -20,28 +21,53 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState<Record<string, boolean>>({});
-  const [score, setScore] = useState(0);
-  const { setProgress } = useAppStore();
+  const [feedback, setFeedback] = useState<Record<string, string>>({});
+  const [earnedScores, setEarnedScores] = useState<Record<string, number>>({});
+  const { setProgress, getProgress, recordWrongAnswer, resolveWrongAnswer } = useAppStore();
 
   /** 计算总可能得分 */
   const totalMaxScore = exercises.reduce((sum, e) => sum + e.score, 0);
+  const score = Object.values(earnedScores).reduce((sum, value) => sum + value, 0);
 
   const currentExercise = exercises[currentIndex];
 
   const handleSelect = (option: string) => {
     if (!showResults[currentExercise.id]) {
-      setAnswers({ ...answers, [currentExercise.id]: option });
+      if (currentExercise.type === 'multiple') {
+        const selected = (answers[currentExercise.id] || '').split(',').filter(Boolean);
+        const next = selected.includes(option)
+          ? selected.filter((item) => item !== option)
+          : [...selected, option];
+        setAnswers({ ...answers, [currentExercise.id]: next.sort().join(',') });
+      } else {
+        setAnswers({ ...answers, [currentExercise.id]: option });
+      }
     }
   };
 
   const handleSubmit = () => {
     const currentAnswer = answers[currentExercise.id] || '';
-    const isCorrect = currentAnswer.toLowerCase() === currentExercise.answer.toLowerCase();
+    const evaluation = evaluateAnswer(currentExercise, currentAnswer);
+    const earnedScore = Math.round(currentExercise.score * evaluation.scoreRatio);
     
     setShowResults({ ...showResults, [currentExercise.id]: true });
-    
-    if (isCorrect) {
-      setScore(prev => prev + currentExercise.score);
+    setFeedback({ ...feedback, [currentExercise.id]: evaluation.feedback });
+    setEarnedScores({ ...earnedScores, [currentExercise.id]: earnedScore });
+    if (evaluation.correct) {
+      resolveWrongAnswer(currentExercise.id);
+    } else {
+      recordWrongAnswer({
+        questionId: currentExercise.id,
+        courseId,
+        chapterId,
+        lessonId,
+        question: currentExercise.question,
+        options: currentExercise.options,
+        type: currentExercise.type,
+        correctAnswer: currentExercise.answer,
+        userAnswer: currentAnswer,
+        explanation: currentExercise.explanation,
+      });
     }
   };
 
@@ -49,17 +75,25 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
   useEffect(() => {
     const allSubmitted = exercises.every(e => showResults[e.id]);
     if (allSubmitted) {
+      const previous = getProgress(courseId, chapterId, lessonId);
+      const scoreRatio = totalMaxScore > 0 ? score / totalMaxScore : 0;
+      const closureComplete = Boolean(previous?.readCompleted && previous?.experimentCompleted && scoreRatio >= 0.8);
       setProgress({
         courseId,
         chapterId,
         lessonId,
-        completed: true,
+        completed: closureComplete,
         exerciseScore: score,
         exerciseMaxScore: totalMaxScore,
+        readCompleted: previous?.readCompleted,
+        experimentCompleted: previous?.experimentCompleted,
+        practiceCompleted: true,
+        masteryLevel: closureComplete ? 'mastered' : scoreRatio >= 0.8 ? 'practiced' : 'understanding',
+        attempts: (previous?.attempts || 0) + 1,
         timestamp: Date.now(),
       });
     }
-  }, [showResults, exercises, score, courseId, chapterId, lessonId, totalMaxScore, setProgress]);
+  }, [showResults, exercises, score, courseId, chapterId, lessonId, totalMaxScore, setProgress, getProgress]);
 
   const handleNext = () => {
     if (currentIndex < exercises.length - 1) {
@@ -79,9 +113,9 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
 
   const getOptionClass = (option: string, optionIndex: number) => {
     const optionLabel = getOptionLabel(optionIndex);
-    const isSelected = answers[currentExercise.id] === optionLabel;
+    const isSelected = (answers[currentExercise.id] || '').split(',').includes(optionLabel);
     const hasSubmitted = showResults[currentExercise.id];
-    const isCorrectAnswer = optionLabel === currentExercise.answer;
+    const isCorrectAnswer = currentExercise.answer.split(/[,|]/).includes(optionLabel);
 
     if (!hasSubmitted) {
       return isSelected ? 'exercise-option selected' : 'exercise-option';
@@ -142,21 +176,21 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
               className={`w-full text-left p-4 rounded-lg border-2 mb-3 flex items-center space-x-3 transition-all duration-200 ${getOptionClass(option, index)}`}
             >
               <span className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
-                answers[currentExercise.id] === getOptionLabel(index) && !showResults[currentExercise.id]
+                (answers[currentExercise.id] || '').split(',').includes(getOptionLabel(index)) && !showResults[currentExercise.id]
                   ? 'bg-primary-600 text-white'
-                  : showResults[currentExercise.id] && getOptionLabel(index) === currentExercise.answer
+                  : showResults[currentExercise.id] && currentExercise.answer.split(/[,|]/).includes(getOptionLabel(index))
                   ? 'bg-green-500 text-white'
-                  : showResults[currentExercise.id] && answers[currentExercise.id] === getOptionLabel(index) && getOptionLabel(index) !== currentExercise.answer
+                  : showResults[currentExercise.id] && (answers[currentExercise.id] || '').split(',').includes(getOptionLabel(index)) && !currentExercise.answer.split(/[,|]/).includes(getOptionLabel(index))
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-100 text-gray-600'
               }`}>
                 {getOptionLabel(index)}
               </span>
               <span className="flex-1">{option}</span>
-              {showResults[currentExercise.id] && getOptionLabel(index) === currentExercise.answer && (
+              {showResults[currentExercise.id] && currentExercise.answer.split(/[,|]/).includes(getOptionLabel(index)) && (
                 <CheckCircle className="w-5 h-5 text-green-500" />
               )}
-              {showResults[currentExercise.id] && answers[currentExercise.id] === getOptionLabel(index) && getOptionLabel(index) !== currentExercise.answer && (
+              {showResults[currentExercise.id] && (answers[currentExercise.id] || '').split(',').includes(getOptionLabel(index)) && !currentExercise.answer.split(/[,|]/).includes(getOptionLabel(index)) && (
                 <XCircle className="w-5 h-5 text-red-500" />
               )}
             </button>
@@ -197,6 +231,11 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
               <div className="text-gray-600 text-sm">
                 <span className="font-medium">解析：</span>{currentExercise.explanation}
               </div>
+              {feedback[currentExercise.id] && (
+                <div className="mt-2 text-sm text-primary-700">
+                  <span className="font-medium">判分反馈：</span>{feedback[currentExercise.id]}
+                </div>
+              )}
             </div>
           )}
 
@@ -226,9 +265,21 @@ export const PracticeArea = ({ exercises, courseId, chapterId, lessonId }: Pract
             )}
 
             {showResults[currentExercise.id] && currentIndex === exercises.length - 1 && (
-              <div className="text-center">
+              <div className="text-right">
                 <span className="text-lg font-bold text-accent-600">练习完成！</span>
                 <p className="text-sm text-gray-500">总得分：{score} / {exercises.reduce((sum, e) => sum + e.score, 0)}</p>
+                <button
+                  onClick={() => {
+                    setCurrentIndex(0);
+                    setAnswers({});
+                    setShowResults({});
+                    setFeedback({});
+                    setEarnedScores({});
+                  }}
+                  className="mt-2 rounded-lg border border-primary-300 px-3 py-1 text-xs font-bold text-primary-700"
+                >
+                  重新练习
+                </button>
               </div>
             )}
           </div>
