@@ -1,5 +1,5 @@
-import { useRef, useState, lazy, Suspense } from 'react';
-import { ChevronDown, ChevronRight, PlayCircle, CheckCircle, BarChart3, AlertTriangle, Lightbulb, Target } from 'lucide-react';
+import { useRef, useState, useEffect, lazy, Suspense } from 'react';
+import { ChevronDown, ChevronRight, PlayCircle, CheckCircle, BarChart3, AlertTriangle, Lightbulb, Target, ChevronLeft, ChevronRight as ChevronRightIcon, ArrowUp } from 'lucide-react';
 import { Chapter, Lesson } from '../data/cLanguage';
 import { CodeBlock } from '../components/CodeBlock';
 import { PracticeArea } from '../components/PracticeArea';
@@ -79,6 +79,44 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
   const [selectedChapterId, setSelectedChapterId] = useState<string>(chapters[0]?.id || '');
   const { setProgress, getProgress, getCourseProgress, setSidebarOpen } = useAppStore();
   const lessonContentRef = useRef<HTMLDivElement>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // 监听滚动，显示/隐藏返回顶部按钮
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 返回顶部
+  const handleBackToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 获取所有课时列表
+  const allLessons = chapters.flatMap(chapter => 
+    chapter.lessons.map(lesson => ({ ...lesson, chapterId: chapter.id }))
+  );
+
+  // 获取上一个/下一个课时
+  const currentIndex = allLessons.findIndex(l => l.id === selectedLesson?.id);
+  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+
+  // 切换到上一个/下一个课时
+  const handlePrevLesson = () => {
+    if (prevLesson) {
+      handleLessonSelect(prevLesson.chapterId, prevLesson);
+    }
+  };
+
+  const handleNextLesson = () => {
+    if (nextLesson) {
+      handleLessonSelect(nextLesson.chapterId, nextLesson);
+    }
+  };
 
   const courseProgress = getCourseProgress(courseId);
   const totalLessons = chapters.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
@@ -293,6 +331,45 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
                     lessonId={selectedLesson.id}
                   />
                 )}
+
+                {/* Lesson Navigation */}
+                <div className="mt-8 pt-6 border-t flex justify-between items-center">
+                  <button
+                    onClick={handlePrevLesson}
+                    disabled={!prevLesson}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                      prevLesson
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="text-sm font-medium">上一节</span>
+                    {prevLesson && (
+                      <span className="text-xs text-gray-500 hidden sm:block">- {prevLesson.title}</span>
+                    )}
+                  </button>
+
+                  <div className="text-sm text-gray-500">
+                    {activeLessonNumber} / {totalLessons}
+                  </div>
+
+                  <button
+                    onClick={handleNextLesson}
+                    disabled={!nextLesson}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                      nextLesson
+                        ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="text-sm font-medium">下一节</span>
+                    {nextLesson && (
+                      <span className="text-xs text-primary-200 hidden sm:block">{nextLesson.title} -</span>
+                    )}
+                    <ChevronRightIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-sm p-12 text-center">
@@ -306,6 +383,17 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
           </div>
         </div>
       </div>
+
+      {/* Back to Top Button */}
+      <button
+        onClick={handleBackToTop}
+        className={`fixed bottom-8 right-8 z-50 flex items-center justify-center w-12 h-12 bg-primary-600 text-white rounded-full shadow-lg transition-all duration-300 ${
+          showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        } hover:bg-primary-700 hover:scale-105`}
+        aria-label="返回顶部"
+      >
+        <ArrowUp className="w-6 h-6" />
+      </button>
     </div>
   );
 };

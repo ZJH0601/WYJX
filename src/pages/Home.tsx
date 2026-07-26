@@ -27,27 +27,6 @@ export const Home = () => {
     },
   ];
 
-  const testimonials = [
-    {
-      name: '张三',
-      course: 'C语言',
-      comment: '通过这个平台学习，我顺利通过了职业高考，感谢老师们的精心教学！',
-      score: '95分',
-    },
-    {
-      name: '李四',
-      course: '办公自动化',
-      comment: 'Excel和Word课程非常实用，现在工作中也经常用到这些技能。',
-      score: '90分',
-    },
-    {
-      name: '王五',
-      course: '网络知识',
-      comment: '网络课程讲解清晰，知识点覆盖全面，考试轻松应对。',
-      score: '92分',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -140,36 +119,6 @@ export const Home = () => {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-12 bg-gradient-to-br from-primary-50 to-primary-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">学员评价</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((item, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-center space-x-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg key={star} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-600 mb-4">"{item.comment}"</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-500">{item.course}学员</p>
-                  </div>
-                  <span className="bg-accent-100 text-accent-600 px-3 py-1 rounded-full text-sm font-medium">
-                    高考成绩: {item.score}
-                  </span>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
