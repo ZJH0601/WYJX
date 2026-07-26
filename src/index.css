@@ -136,6 +136,23 @@ a:focus-visible {
   color: inherit;
 }
 
+/* 移动端代码块优化 */
+@media (max-width: 640px) {
+  .code-block {
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .lesson-content pre {
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .code-keyword {
   color: #c678dd;
 }
