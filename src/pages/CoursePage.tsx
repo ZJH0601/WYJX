@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useRef, useState, lazy, Suspense } from 'react';
 import { ChevronDown, ChevronRight, PlayCircle, CheckCircle, BarChart3, AlertTriangle, Lightbulb, Target } from 'lucide-react';
 import { Chapter, Lesson } from '../data/cLanguage';
 import { CodeBlock } from '../components/CodeBlock';
@@ -75,7 +75,8 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
   const [expandedChapters, setExpandedChapters] = useState<string[]>(chapters.map(c => c.id));
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(chapters[0]?.lessons[0] || null);
   const [selectedChapterId, setSelectedChapterId] = useState<string>(chapters[0]?.id || '');
-  const { setProgress, getProgress, getCourseProgress } = useAppStore();
+  const { setProgress, getProgress, getCourseProgress, setSidebarOpen } = useAppStore();
+  const lessonContentRef = useRef<HTMLDivElement>(null);
 
   const courseProgress = getCourseProgress(courseId);
   const totalLessons = chapters.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
@@ -95,6 +96,23 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
   const handleLessonSelect = (chapterId: string, lesson: Lesson) => {
     setSelectedLesson(lesson);
     setSelectedChapterId(chapterId);
+
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setSidebarOpen(false);
+    }
+
+    // 等待新课时内容渲染后，将正文标题滚动到固定导航栏下方。
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const content = lessonContentRef.current;
+        if (!content) return;
+        const headerOffset = 80;
+        const targetTop = content.getBoundingClientRect().top + window.scrollY - headerOffset;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: reduceMotion ? 'auto' : 'smooth' });
+        content.focus({ preventScroll: true });
+      });
+    });
 
     const progress = getProgress(courseId, chapterId, lesson.id);
     if (!progress) {
@@ -195,7 +213,12 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
           </div>
 
           {/* Right Content - Lesson */}
-          <div className="flex-1">
+          <div
+            ref={lessonContentRef}
+            tabIndex={-1}
+            className="flex-1 scroll-mt-20 outline-none"
+            aria-live="polite"
+          >
             {selectedLesson ? (
               <div className="bg-white rounded-xl shadow-sm p-6 animate-fadeIn">
                 {/* Lesson Header */}
