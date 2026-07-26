@@ -1,0 +1,1 @@
+import{j as r,v as o}from"./index-BruAsCWg.js";import{C as t}from"./CoursePage-BvtHI0sS.js";import"./react-vendor-DyJc3qc1.js";import"./ui-vendor-CGXHmXdo.js";import"./search-vendor-t_7AcMTv.js";const a=()=>r.jsx(t,{title:"VFP数据库应用",description:"深入学习数据库原理，掌握Visual FoxPro操作和SQL查询语言，包括数据表的创建与操作、索引与查询、表单设计、报表设计等内容，全面覆盖职业高考数据库考点。",chapters:o,courseId:"vfp"});export{a as VFP};

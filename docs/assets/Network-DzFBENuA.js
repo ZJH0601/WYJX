@@ -1,0 +1,1 @@
+import{j as r,n as o}from"./index-BruAsCWg.js";import{C as t}from"./CoursePage-BvtHI0sS.js";import"./react-vendor-DyJc3qc1.js";import"./ui-vendor-CGXHmXdo.js";import"./search-vendor-t_7AcMTv.js";const n=()=>r.jsx(t,{title:"计算机网络基础",description:"系统学习计算机网络基础知识，包括OSI参考模型、TCP/IP协议、IP地址、HTTP协议、网络安全等内容，掌握职业高考网络技术考点，提升网络配置和故障排查能力。",chapters:o,courseId:"network"});export{n as Network};
