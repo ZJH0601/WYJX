@@ -30,6 +30,18 @@ const cQuestions = (): Exercise[] => Array.from({ length: 250 }, (_, index) => {
     choice(`c-array-${seed}`, `int a[5]={${a},${b},${a + b},${a - b},${a * b}}; 表达式 a[2] 的值是？`,
       [String(a + b), String(b), String(a - b), String(a * b)], 0,
       `C 数组下标从 0 开始：a[0]=${a}，a[1]=${b}，a[2]=${a + b}。`, d),
+    choice(`c-precedence-${seed}`, `表达式 ${a} + ${b} * 2 的值是多少？`,
+      [String(a + b * 2), String((a + b) * 2), String(a * b + 2), String(a + b)], 0,
+      `乘法优先级高于加法，先算 ${b}×2=${b * 2}，再加 ${a}，结果为 ${a + b * 2}。`, d),
+    choice(`c-pointer-${seed}`, `int x=${a}; int *p=&x; 执行 *p=${b}; 后，x的值是？`,
+      [String(b), String(a), String(a + b), '地址值'], 0,
+      `p保存x的地址，*p表示通过地址访问x。给*p赋值就是修改x，因此x变为${b}。`, d),
+    choice(`c-function-${seed}`, `函数 int square(int x){ return x*x; }，调用 square(${b}) 返回？`,
+      [String(b * b), String(b * 2), String(b), String(b + 1)], 0,
+      `实参${b}传给形参x，返回x*x=${b}×${b}=${b * b}。`, d),
+    choice(`c-type-${seed}`, `需要保存带小数的平均成绩 ${(a + b) / 2}，以下哪种类型更合适？`,
+      ['double', 'char', 'int（且不做转换）', 'void'], 0,
+      'double能够保存浮点数；int会丢失小数部分，char主要保存字符，void表示无值。', d),
   ];
 }).flat();
 
@@ -52,6 +64,18 @@ const vfpQuestions = (): Exercise[] => Array.from({ length: 250 }, (_, index) =>
     choice(`v-index-${seed}`, `要按“学号”快速定位记录，建立索引后最适合使用哪条命令？`,
       ['SEEK 学号值', 'GO BOTTOM ALL', 'PACK 学号', 'ZAP 学号'], 0,
       'SEEK 利用当前索引键快速查找；PACK 清理删除标记，ZAP 删除全部记录，都不是查询命令。', d),
+    choice(`v-delete-${seed}`, 'VFP中执行DELETE后发现误删且尚未PACK，恢复当前记录应使用？',
+      ['RECALL', 'ZAP', 'PACK', 'ERASE'], 0,
+      'DELETE通常只添加删除标记；在PACK之前可用RECALL撤销标记。PACK后记录才被物理清除。', d),
+    choice(`v-aggregate-${seed}`, `统计成绩表中分数大于等于${threshold}的记录数，正确SQL是？`,
+      [`SELECT COUNT(*) FROM 成绩 WHERE 分数>=${threshold}`, `SELECT SUM(*) FROM 成绩`, `COUNT 成绩 FOR ${threshold}`, `SELECT * COUNT 成绩`], 0,
+      'COUNT(*)统计满足WHERE条件的记录行数，WHERE必须写在FROM之后。', d),
+    choice(`v-relation-${seed}`, '学生表与成绩表通过“学号”关联时，“学号”在学生表中通常应具备什么特性？',
+      ['唯一且非空', '可以任意重复', '必须是备注型', '必须包含小数'], 0,
+      '作为实体标识和关联依据，学生表中的学号通常应唯一且非空；成绩表可出现同一学号的多门成绩。', d),
+    choice(`v-logical-${seed}`, `筛选分数在${threshold}到${threshold + 10}之间（含边界）的条件是？`,
+      [`分数>=${threshold} AND 分数<=${threshold + 10}`, `分数>=${threshold} OR 分数<=${threshold + 10}`, `分数=${threshold}`, `NOT 分数`], 0,
+      '同时满足下限和上限必须使用AND；使用OR会让几乎所有数值都满足其中一个条件。', d),
   ];
 }).flat();
 
@@ -86,6 +110,18 @@ const networkQuestions = (): Exercise[] => Array.from({ length: 250 }, (_, index
     choice(`n-layer-${seed}`, `${device}主要工作在哪一层？`,
       [layer, '物理层', '会话层', '表示层'], 0,
       `${device}对应${layer}，核心原因是：${reason}。`, d),
+    choice(`n-port-${seed}`, '浏览器访问HTTPS网站时，服务器常用的默认端口是？',
+      ['443', '80', '21', '25'], 0,
+      'HTTPS默认使用TCP 443端口；HTTP常用80，FTP控制连接常用21，SMTP常用25。', d),
+    choice(`n-cable-${seed}`, '一端使用T568A、另一端使用T568B制作的双绞线传统上称为？',
+      ['交叉线', '直通线', '同轴电缆', '光纤跳线'], 0,
+      '两端标准不同会交换发送与接收线对，称为交叉线；两端同为A或同为B是直通线。', d),
+    choice(`n-transport-${seed}`, '视频直播允许少量丢包但强调低延迟时，通常更倾向使用哪种传输方式？',
+      ['UDP', 'TCP且必须逐包等待', 'ARP', 'ICMP'], 0,
+      'UDP无连接、开销较小，应用可自行处理必要的纠错；TCP强调可靠、有序传输，延迟特征不同。', d),
+    choice(`n-dns-${seed}`, `用户输入 www.example${seed}.com 后，首先需要哪类服务把域名解析为IP地址？`,
+      ['DNS', 'DHCP', 'FTP', 'SMTP'], 0,
+      'DNS负责域名与IP等资源记录的查询；DHCP分配网络参数，FTP传文件，SMTP传邮件。', d),
   ];
 }).flat();
 
@@ -109,6 +145,18 @@ const officeQuestions = (): Exercise[] => Array.from({ length: 250 }, (_, index)
     choice(`o-reference-${seed}`, `把公式 =$A1+B$1 从第1行向下复制到第${2 + seed % 8}行，哪部分始终不变？`,
       ['A列与第1行', 'A1整体', 'B列与当前行', '所有引用都会变化'], 0,
       '$A1 锁定 A 列但行可变；B$1 锁定第 1 行但列可变。这是混合引用。', d),
+    choice(`o-countif-${seed}`, `统计A1:A10中大于等于${a}的单元格数量，正确公式是？`,
+      [`=COUNTIF(A1:A10,">=${a}")`, `=SUM(A1:A10,">=${a}")`, `=COUNT(A1:A10,${a})`, `=IF(A1:A10>=${a})`], 0,
+      'COUNTIF由统计区域和条件组成；比较条件需要作为文本写在引号中。', d),
+    choice(`o-lookup-${seed}`, '需要根据商品编号在纵向数据表中返回对应价格，最典型的函数是？',
+      ['VLOOKUP', 'SUM', 'LEFT', 'TODAY'], 0,
+      'VLOOKUP按表格第一列纵向查找并返回指定列的数据；新版Excel也可使用XLOOKUP。', d),
+    choice(`o-style-${seed}`, 'Word中要让所有一级标题统一更新格式并可自动生成目录，应该优先使用？',
+      ['标题1样式', '逐个手动加粗', '空格对齐', '文本框覆盖'], 0,
+      '结构化标题样式能统一格式、支持导航窗格并作为自动目录的层级依据。', d),
+    choice(`o-sort-${seed}`, '对学生表先按班级升序、再按成绩降序排列，应使用？',
+      ['多关键字排序', '只设置筛选', '查找替换', '合并单元格'], 0,
+      '多关键字排序能指定主要关键字与次要关键字及各自顺序；筛选只控制显示哪些记录。', d),
   ];
 }).flat();
 

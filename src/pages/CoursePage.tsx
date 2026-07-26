@@ -6,6 +6,7 @@ import { PracticeArea } from '../components/PracticeArea';
 import { useAppStore } from '../store/appStore';
 import { LearningCycle } from '../components/LearningCycle';
 import { InteractiveLab } from '../components/InteractiveLab';
+import { ScenarioWorkshop } from '../components/ScenarioWorkshop';
 
 /** 可视化组件数据驱动映射表 - 通过 visualType 字段动态加载可视化组件 */
 const VISUALIZATION_MAP: Record<string, () => React.ReactElement> = {
@@ -272,6 +273,7 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
                 )}
 
                 <InteractiveLab courseId={labCourse} compact lessonTitle={selectedLesson.title} />
+                <ScenarioWorkshop courseId={labCourse} />
 
                 {/* Practice Area */}
                 {selectedLesson.exercises && selectedLesson.exercises.length > 0 && (

@@ -48,7 +48,7 @@ export const vfpCourse: Chapter[] = [
 <li>1989年：FoxPro 1.0</li>
 <li>1995年：Visual FoxPro 3.0</li>
 <li>2000年：Visual FoxPro 7.0</li>
-<li>2004年：Visual FoxPro 9.0（最新版本）</li>
+<li>2004年：Visual FoxPro 9.0（最后发布的主要版本；微软扩展支持已于2015年结束，本课程按考试与遗留系统维护需要讲授）</li>
 </ul>
 
 <h3>1.2.2 VFP的特点</h3>
@@ -63,10 +63,10 @@ export const vfpCourse: Chapter[] = [
           {
             id: 'v1-2-1',
             type: 'single',
-            question: 'VFP最新的版本是？',
+            question: 'Visual FoxPro最后发布的主要版本是？',
             options: ['6.0', '7.0', '8.0', '9.0'],
             answer: 'D',
-            explanation: 'Visual FoxPro 9.0是2004年发布的最新版本。',
+            explanation: 'Visual FoxPro 9.0是2004年发布的最后一个主要版本；它已经结束微软支持，但部分考试与遗留系统仍会涉及。',
             score: 2
           }
         ]

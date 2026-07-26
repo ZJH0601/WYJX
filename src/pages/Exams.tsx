@@ -164,7 +164,7 @@ export const Exams = () => {
       {!selectedExam && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">题库与随机强化系统</h1>
-          <p className="text-gray-600 mb-6">四科共 4,000 道参数化变式题，加固定模拟卷；每次随机抽题、即时评分并提供推理解析。</p>
+          <p className="text-gray-600 mb-6">四科共 8,000 道参数化变式题，加固定模拟卷；每次随机抽题、即时评分并提供推理解析。</p>
 
           {/* 难度筛选 */}
           <div className="flex items-center space-x-2 mb-6">
@@ -193,7 +193,7 @@ export const Exams = () => {
             <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">Massive adaptive banks</p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">每科 1,000 道海量强化题库</h2>
+                <h2 className="mt-1 text-xl font-bold text-slate-900">每科 2,000 道海量强化题库</h2>
               </div>
               <p className="text-xs text-slate-500">每次抽取 20 道 · 可按当前难度筛选 · 重复训练自动更换题组</p>
             </div>

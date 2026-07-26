@@ -23,7 +23,7 @@ export const Home = () => {
     {
       icon: <Clock className="w-8 h-8" />,
       title: '随时随地',
-      description: '支持离线学习，自由安排时间',
+      description: '响应式适配手机、平板和电脑，学习进度保存在当前设备',
     },
   ];
 
@@ -70,12 +70,12 @@ export const Home = () => {
                 <span className="ml-2 text-primary-200">学习课时</span>
               </div>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
-                <span className="text-3xl font-bold">4,000+</span>
+                <span className="text-3xl font-bold">8,000+</span>
                 <span className="ml-2 text-primary-200">分层变式题</span>
               </div>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
-                <span className="text-3xl font-bold">100%</span>
-                <span className="ml-2 text-primary-200">高考覆盖</span>
+                <span className="text-3xl font-bold">4科</span>
+                <span className="ml-2 text-primary-200">协同学习</span>
               </div>
             </div>
           </div>

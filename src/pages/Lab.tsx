@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Code2, Database, FileSpreadsheet, Network } from 'lucide-react';
 import { InteractiveLab } from '../components/InteractiveLab';
+import { ScenarioWorkshop } from '../components/ScenarioWorkshop';
 
 type CourseId = 'c-language' | 'vfp' | 'network' | 'office';
 
@@ -31,6 +32,7 @@ export const Lab = () => {
           ))}
         </div>
         <InteractiveLab courseId={active} />
+        <ScenarioWorkshop courseId={active} />
         <section className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             ['1. 先预测', '运行前写下你认为会得到的结果，以及判断依据。'],
