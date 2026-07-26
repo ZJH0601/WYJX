@@ -12,6 +12,7 @@ const Network = lazy(() => import('./pages/Network').then(m => ({ default: m.Net
 const Office = lazy(() => import('./pages/Office').then(m => ({ default: m.Office })));
 const Exams = lazy(() => import('./pages/Exams').then(m => ({ default: m.Exams })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Lab = lazy(() => import('./pages/Lab').then(m => ({ default: m.Lab })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 /** 课程页面加载骨架屏 */
@@ -56,6 +57,7 @@ const CourseLayout = () => {
             <Route path="/office" element={<Office />} />
             <Route path="/exams" element={<Exams />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/lab" element={<Lab />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

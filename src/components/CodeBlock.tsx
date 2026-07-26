@@ -23,7 +23,7 @@ export const CodeBlock = ({ code, language = 'c' }: CodeBlockProps) => {
     // 简单的语法高亮
     const keywords = ['int', 'float', 'char', 'void', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'return', 'include', 'define', 'struct', 'union', 'typedef', 'static', 'extern', 'const', 'sizeof', 'NULL', 'TRUE', 'FALSE', 'main'];
     
-    let highlighted = code
+    const highlighted = code
       // 处理注释
       .replace(/(\/\/.*$)/gm, '<span class="code-comment">$1</span>')
       .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="code-comment">$1</span>')

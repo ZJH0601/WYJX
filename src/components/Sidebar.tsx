@@ -1,6 +1,6 @@
-import { ChevronRight, ChevronDown, BookOpen, Database, Globe, FileSpreadsheet, BarChart3 } from 'lucide-react';
+import { ChevronRight, BookOpen, Database, Globe, FileSpreadsheet, BarChart3, FlaskConical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 
 interface CourseLink {
@@ -18,16 +18,13 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarOpen, setSidebarOpen } = useAppStore();
-  const [expandedCourses, setExpandedCourses] = useState<string[]>([]);
 
-  const toggleCourse = (course: string) => {
-    if (expandedCourses.includes(course)) {
-      setExpandedCourses(expandedCourses.filter(c => c !== course));
-    } else {
-      setExpandedCourses([...expandedCourses, course]);
+  // 移动设备切换页面后必须关闭抽屉，确保课程正文不会被目录遮挡。
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setSidebarOpen(false);
     }
-  };
-
+  }, [location.pathname, setSidebarOpen]);
   const courseLinks: CourseLink[] = [
     { path: '/c-language', label: 'C语言', icon: <BookOpen className="w-5 h-5" /> },
     { path: '/vfp', label: 'VFP数据库', icon: <Database className="w-5 h-5" /> },
@@ -76,7 +73,6 @@ export const Sidebar = () => {
           </button>
 
           {courseLinks.map((course) => {
-            const isExpanded = expandedCourses.includes(course.path);
             const active = isActive(course.path);
 
             return (
@@ -84,7 +80,7 @@ export const Sidebar = () => {
                 <button
                   onClick={() => {
                     navigate(course.path);
-                    if (!sidebarOpen) setSidebarOpen(true);
+                    if (window.matchMedia('(max-width: 767px)').matches) setSidebarOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                     active
@@ -99,9 +95,7 @@ export const Sidebar = () => {
                     <span className="truncate">{course.label}</span>
                   </div>
                   <ChevronRight
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isExpanded ? 'rotate-90' : ''
-                    }`}
+                    className="w-4 h-4"
                   />
                 </button>
               </div>
@@ -109,6 +103,17 @@ export const Sidebar = () => {
           })}
 
           <div className="border-t border-gray-200 mt-4 pt-4">
+            <button
+              onClick={() => navigate('/lab')}
+              className={`mb-2 w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive('/lab')
+                  ? 'bg-cyan-600 text-white'
+                  : 'text-gray-700 hover:bg-cyan-50 hover:text-cyan-700'
+              }`}
+            >
+              <FlaskConical className="mr-3 w-5 h-5" />
+              <span>跨课程实训中心</span>
+            </button>
             <button
               onClick={() => navigate('/exams')}
               className={`w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${

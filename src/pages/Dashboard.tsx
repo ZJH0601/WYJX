@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Database, Globe, FileSpreadsheet, BarChart3,
-  Trophy, Target, TrendingUp, Clock, Award, CheckCircle, ArrowRight
+  BookOpen, Database, Globe, FileSpreadsheet,
+  Trophy, Award, CheckCircle, ArrowRight
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { EXAM_NAME_MAP } from '../data/questions';

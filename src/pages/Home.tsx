@@ -18,7 +18,7 @@ export const Home = () => {
     {
       icon: <Users className="w-8 h-8" />,
       title: '实战练习',
-      description: '配套大量练习题和模拟考试',
+      description: '四科各千题、随机强化、模拟考试与逐题解析',
     },
     {
       icon: <Clock className="w-8 h-8" />,
@@ -70,8 +70,8 @@ export const Home = () => {
                 <span className="ml-2 text-primary-200">学习课时</span>
               </div>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
-                <span className="text-3xl font-bold">500+</span>
-                <span className="ml-2 text-primary-200">练习题</span>
+                <span className="text-3xl font-bold">4,000+</span>
+                <span className="ml-2 text-primary-200">分层变式题</span>
               </div>
               <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
                 <span className="text-3xl font-bold">100%</span>

@@ -1,9 +1,11 @@
 import { useState, lazy, Suspense } from 'react';
-import { ChevronDown, ChevronRight, PlayCircle, CheckCircle, BarChart3 } from 'lucide-react';
+import { ChevronDown, ChevronRight, PlayCircle, CheckCircle, BarChart3, AlertTriangle, Lightbulb, Target } from 'lucide-react';
 import { Chapter, Lesson } from '../data/cLanguage';
 import { CodeBlock } from '../components/CodeBlock';
 import { PracticeArea } from '../components/PracticeArea';
 import { useAppStore } from '../store/appStore';
+import { LearningCycle } from '../components/LearningCycle';
+import { InteractiveLab } from '../components/InteractiveLab';
 
 /** 可视化组件数据驱动映射表 - 通过 visualType 字段动态加载可视化组件 */
 const VISUALIZATION_MAP: Record<string, () => React.ReactElement> = {
@@ -77,6 +79,10 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
 
   const courseProgress = getCourseProgress(courseId);
   const totalLessons = chapters.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
+  const activeLessonNumber = chapters
+    .flatMap((chapter) => chapter.lessons)
+    .findIndex((lesson) => lesson.id === selectedLesson?.id) + 1;
+  const labCourse = courseId as 'c-language' | 'vfp' | 'network' | 'office';
 
   const toggleChapter = (chapterId: string) => {
     if (expandedChapters.includes(chapterId)) {
@@ -207,10 +213,30 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
                       </span>
                     )}
                   </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100" aria-label={`课程位置 ${activeLessonNumber}/${totalLessons}`}>
+                    <div className="h-full rounded-full bg-primary-600 transition-all" style={{ width: `${Math.max(4, (activeLessonNumber / totalLessons) * 100)}%` }} />
+                  </div>
+                </div>
+
+                <LearningCycle />
+
+                <div className="my-6 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                    <div className="flex items-center gap-2 font-bold text-blue-800"><Target className="h-4 w-4" />本节达成标准</div>
+                    <p className="mt-2 text-sm leading-6 text-blue-900/80">能解释“{selectedLesson.title}”的核心规则，并独立完成至少一道变式题。</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                    <div className="flex items-center gap-2 font-bold text-amber-800"><AlertTriangle className="h-4 w-4" />学习提醒</div>
+                    <p className="mt-2 text-sm leading-6 text-amber-900/80">不要只背结论：主动预测示例结果，特别检查边界条件与易混概念。</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                    <div className="flex items-center gap-2 font-bold text-emerald-800"><Lightbulb className="h-4 w-4" />掌握证据</div>
+                    <p className="mt-2 text-sm leading-6 text-emerald-900/80">不看正文复述原理，修改实验输入后仍能提前判断输出，才算真正掌握。</p>
+                  </div>
                 </div>
 
                 {/* Lesson Content */}
-                <div className="prose prose-lg max-w-none">
+                <div className="lesson-content prose prose-lg max-w-none rounded-2xl border border-slate-100 bg-white p-1 sm:p-3">
                   <div dangerouslySetInnerHTML={{ __html: selectedLesson.content }} />
                 </div>
 
@@ -221,6 +247,8 @@ export const CoursePage = ({ title, description, chapters, courseId }: CoursePag
                 {selectedLesson.code && (
                   <CodeBlock code={selectedLesson.code} language="c" />
                 )}
+
+                <InteractiveLab courseId={labCourse} compact lessonTitle={selectedLesson.title} />
 
                 {/* Practice Area */}
                 {selectedLesson.exercises && selectedLesson.exercises.length > 0 && (

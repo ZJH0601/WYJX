@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FileText, Clock, CheckCircle, PlayCircle, ArrowLeft, Timer, RotateCcw, BarChart3, Filter } from 'lucide-react';
 import { exams, Exam } from '../data/questions';
+import { createMassivePracticeExam, MASSIVE_BANK_META } from '../data/massiveQuestionBank';
 import { useAppStore } from '../store/appStore';
 
 /** 考试时间限制（分钟） */
@@ -28,7 +29,7 @@ export const Exams = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { setExamResult, getExamResults } = useAppStore();
+  const { setExamResult } = useAppStore();
 
   /** 倒计时逻辑 */
   useEffect(() => {
@@ -162,8 +163,8 @@ export const Exams = () => {
       {/* Exam List */}
       {!selectedExam && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">题库系统</h1>
-          <p className="text-gray-600 mb-6">选择一套试卷开始测试，检验你的学习成果</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">题库与随机强化系统</h1>
+          <p className="text-gray-600 mb-6">四科共 4,000 道参数化变式题，加固定模拟卷；每次随机抽题、即时评分并提供推理解析。</p>
 
           {/* 难度筛选 */}
           <div className="flex items-center space-x-2 mb-6">
@@ -188,6 +189,41 @@ export const Exams = () => {
             ))}
           </div>
 
+          <section className="mb-10">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">Massive adaptive banks</p>
+                <h2 className="mt-1 text-xl font-bold text-slate-900">每科 1,000 道海量强化题库</h2>
+              </div>
+              <p className="text-xs text-slate-500">每次抽取 20 道 · 可按当前难度筛选 · 重复训练自动更换题组</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {MASSIVE_BANK_META.map((bank) => (
+                <article key={bank.courseId} className="rounded-2xl border border-cyan-100 bg-gradient-to-br from-white to-cyan-50 p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-lg bg-cyan-700 px-3 py-1 text-xs font-bold text-white">{bank.courseName}</span>
+                    <span className="text-2xl font-black text-slate-900">{bank.count.toLocaleString()}</span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">覆盖基础辨析、计算推导、情境判断和易错边界，题目均带答案与原因解析。</p>
+                  <button
+                    onClick={() => handleStartExam(createMassivePracticeExam(
+                      bank.courseId,
+                      difficultyFilter as 'all' | 'basic' | 'improve' | 'exam',
+                    ))}
+                    className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white hover:bg-cyan-800"
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    随机抽取 20 题
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary-600">Structured papers</p>
+            <h2 className="mt-1 text-xl font-bold text-slate-900">固定模拟试卷</h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {exams
               .filter(e => difficultyFilter === 'all' || e.difficulty === difficultyFilter)

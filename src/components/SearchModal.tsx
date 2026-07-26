@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, X, BookOpen, Database, Globe, FileSpreadsheet, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Fuse from 'fuse.js';
 import type { FuseResult } from 'fuse.js';
 import { SearchableContent } from '../data/cLanguage';
 import { buildSearchIndex } from '../utils/searchIndex';

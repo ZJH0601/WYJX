@@ -81,7 +81,7 @@ export const useAppStore = create<AppState>()(
       currentCourse: '',
       currentChapter: '',
       currentLesson: '',
-      sidebarOpen: true,
+      sidebarOpen: false,
       
       /** 设置或更新学习进度 */
       setProgress: (newProgress) => {
@@ -145,7 +145,6 @@ export const useAppStore = create<AppState>()(
       /** 获取全局学习统计 */
       getOverallStats: () => {
         const state = get();
-        const courseIds = Object.keys(COURSE_LESSON_COUNTS);
         const totalLessons = Object.values(COURSE_LESSON_COUNTS).reduce((s, c) => s + c, 0);
         const completedLessons = state.progress.filter((p) => p.completed).length;
         const totalExams = state.examResults.length;

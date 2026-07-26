@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Menu, X, Search } from 'lucide-react';
+import { BookOpen, Menu, X, Search, FlaskConical } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
 import { SearchModal } from './SearchModal';
@@ -22,6 +22,7 @@ export const Header = () => {
     { path: '/vfp', label: 'VFP数据库' },
     { path: '/network', label: '网络知识' },
     { path: '/office', label: '办公自动化' },
+    { path: '/lab', label: '实训中心' },
     { path: '/exams', label: '题库系统' },
   ];
 
@@ -37,7 +38,7 @@ export const Header = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold">职业高考学习平台</h1>
-                <p className="text-xs text-primary-200">Vocational College Entrance Exam</p>
+                <p className="text-xs text-primary-200">全端同源课程 · 2026.07 深度版</p>
               </div>
             </div>
 
@@ -65,6 +66,13 @@ export const Header = () => {
               >
                 <Search className="w-4 h-4" />
                 <span className="text-xs bg-primary-800 px-2 py-0.5 rounded">Ctrl+K</span>
+              </button>
+              <button
+                onClick={() => navigate('/lab')}
+                className="p-2 rounded-lg hover:bg-primary-700 transition-colors"
+                aria-label="打开实训中心"
+              >
+                <FlaskConical className="w-5 h-5" />
               </button>
             </nav>
 

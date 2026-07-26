@@ -1709,15 +1709,15 @@ BUILD EXE 学生成绩管理系统 FROM 学生成绩管理系统</code></pre>
 <h3>7.2.6 系统维护</h3>
 <p><strong>数据备份与恢复：</strong></p>
 <pre><code class="code-block">* 备份数据库
-COPY FILE 学生成绩管理系统.DBC TO 备份\学生成绩管理系统.DBC
-COPY FILE 学生.DBF TO 备份\学生.DBF
-COPY FILE 成绩.DBF TO 备份\成绩.DBF
-COPY FILE 课程.DBF TO 备份\课程.DBF
+COPY FILE 学生成绩管理系统.DBC TO 备份\\学生成绩管理系统.DBC
+COPY FILE 学生.DBF TO 备份\\学生.DBF
+COPY FILE 成绩.DBF TO 备份\\成绩.DBF
+COPY FILE 课程.DBF TO 备份\\课程.DBF
 
 * 恢复数据库
-COPY FILE 备份\学生成绩管理系统.DBC TO 学生成绩管理系统.DBC
-COPY FILE 备份\学生.DBF TO 学生.DBF
-COPY FILE 备份\成绩.DBF TO 成绩.DBF</code></pre>
+COPY FILE 备份\\学生成绩管理系统.DBC TO 学生成绩管理系统.DBC
+COPY FILE 备份\\学生.DBF TO 学生.DBF
+COPY FILE 备份\\成绩.DBF TO 成绩.DBF</code></pre>
 <p><strong>日常维护任务：</strong></p>
 <ul>
 <li>定期备份数据库和数据表</li>

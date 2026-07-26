@@ -19,6 +19,65 @@ body {
   background-color: #f8fafc;
 }
 
+button, input, textarea, select {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+.lesson-content h3 {
+  margin-top: 2rem;
+  padding-left: 0.85rem;
+  border-left: 4px solid #2563eb;
+  color: #0f172a;
+}
+
+.lesson-content h4 {
+  margin-top: 1.5rem;
+  color: #1e3a8a;
+}
+
+.lesson-content p,
+.lesson-content li {
+  line-height: 1.9;
+}
+
+.lesson-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .lesson-content {
+    font-size: 0.98rem;
+  }
+
+  textarea,
+  input,
+  select {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;

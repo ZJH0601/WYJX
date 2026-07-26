@@ -37,30 +37,6 @@ export const FlowChart = ({ nodes, connections, title }: FlowChartProps) => {
     }
   };
 
-  const getNodeShape = (type: FlowNode['type']) => {
-    switch (type) {
-      case 'start':
-      case 'end':
-        return 'rounded-full';
-      case 'decision':
-        return 'rotate-45';
-      default:
-        return 'rounded-lg';
-    }
-  };
-
-  const getNodeSize = (type: FlowNode['type']) => {
-    switch (type) {
-      case 'start':
-      case 'end':
-        return 'w-16 h-16';
-      case 'decision':
-        return 'w-24 h-24';
-      default:
-        return 'w-32 h-16';
-    }
-  };
-
   return (
     <div className="bg-gray-50 rounded-xl p-6 my-6">
       {title && <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">{title}</h4>}
