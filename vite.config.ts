@@ -5,6 +5,10 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // https://vite.dev/config/
 export default defineConfig({
   base: './',
+  server: {
+    port: 7897,
+    host: '0.0.0.0',
+  },
   build: {
     sourcemap: false,
     /** 代码分割优化 */
